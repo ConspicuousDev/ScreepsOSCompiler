@@ -11,10 +11,10 @@ def compileDirectory(inputDir, outputDir):
     inputWalk = os.walk(inputDir)
     print("Generating file mappings...")
     for path, dirs, files in inputWalk:
-        if path.split("\\")[-1].startswith("."):
+        if path.replace(inputDir+"\\", "").split("\\")[0] in [".git", "node_modules", ".idea", ".fleet"]:
             continue
         for file in files:
-            if file in ["LICENSE", "README.md"]:
+            if file in ["LICENSE", "README.md", "package.json", "package-lock.json", ".gitignore"]:
                 continue
             pathDiff = path.replace(inputDir, "").replace("\\", "_")
             if len(pathDiff) > 0 and pathDiff[0] == "_":
@@ -27,18 +27,23 @@ def compileDirectory(inputDir, outputDir):
                 "from": inputDir + "\\" + pathDiff.replace("_", "\\") + ("\\" if len(pathDiff) > 0 else "") + file,
                 "to": outputDir + "\\" + mappedFile
             }
+            print(f"  MAPPED: {mappedFile}")
     print("File mappings generated.")
     print("Applying file mappings to compiled sources...")
     outputWalk = os.walk(outputDir)
     for path, dirs, files in outputWalk:
         for file in files:
-            print(f"FILE: {file}")
+            print(f"  FILE: {file}")
             if not file.endswith(".js"):
                 continue
             read = open(path + "\\" + file, "r")
             contents = read.read()
             read.close()
             for match in re.findall(r"require\(\"(.*)\"\)|from \"(.*)\"", contents):
+                if len(match[0]) > 0:
+                    match = match[0]
+                elif len(match[1]) > 0:
+                    match = match[1]
                 os.chdir(os.path.dirname(fileMap[file]["from"]))
                 replaced = False
                 if "/" in match:
@@ -49,10 +54,9 @@ def compileDirectory(inputDir, outputDir):
                     relative += ".js"
                 filtered = list(filter(lambda fileName: fileMap[fileName]["from"] == relative, list(fileMap)))
                 if len(filtered) == 0:
-                    raise Exception(
-                        f"COMPILATION ERROR: Refereced file '{relative}' not found on original files ('{fileMap[file]['from']}').")
+                    raise Exception(f"COMPILATION ERROR: Refereced file '{relative}' not found on original files ('{fileMap[file]['from']}').")
                 contents = contents.replace(match.replace("\\", "/") if replaced else match, "./" + list(filtered)[0])
-                print(f"  MAPPING: {match} → .\\{list(filtered)[0]}")
+                print(f"    MAPPING: {match} → .\\{list(filtered)[0]}")
             write = open(path + "\\" + file, "w")
             write.write(contents)
             write.close()
