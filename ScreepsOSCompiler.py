@@ -36,7 +36,7 @@ def compileDirectory(inputDir, outputDir):
             read = open(path + "\\" + file, "r")
             contents = read.read()
             read.close()
-            for match in re.findall(r"require\(\"(.*)\"\)", contents):
+            for match in re.findall(r"require\(\"(.*)\"\)|from \"(.*)\"", contents):
                 os.chdir(os.path.dirname(fileMap[file]["from"]))
                 replaced = False
                 if "/" in match:
