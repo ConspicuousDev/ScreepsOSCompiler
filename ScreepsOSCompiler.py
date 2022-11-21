@@ -11,6 +11,8 @@ def compileDirectory(inputDir, outputDir):
     inputWalk = os.walk(inputDir)
     print("Generating file mappings...")
     for path, dirs, files in inputWalk:
+        if path.split("\\")[-1].startswith("."):
+            continue
         for file in files:
             pathDiff = path.replace(inputDir, "").replace("\\", "_")
             if len(pathDiff) > 0 and pathDiff[0] == "_":
