@@ -14,6 +14,8 @@ def compileDirectory(inputDir, outputDir):
         if path.split("\\")[-1].startswith("."):
             continue
         for file in files:
+            if file in ["LICENSE", "README.md"]:
+                continue
             pathDiff = path.replace(inputDir, "").replace("\\", "_")
             if len(pathDiff) > 0 and pathDiff[0] == "_":
                 pathDiff = pathDiff[1:]
